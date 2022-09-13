@@ -9,7 +9,7 @@ $CVA6_DIR/core/include/wt_cache_pkg.sv
 $CVA6_DIR/corev_apu/axi/src/axi_pkg.sv
 $CVA6_DIR/core/include/axi_intf.sv
 $CVA6_DIR/corev_apu/tb/rvfi_pkg.sv
-$CVA6_DIR/corev_apu/tb/ariane_soc_pkg.sv
+$CURR_SRC_DIR/ariane_soc_pkg.sv
 $CVA6_DIR/corev_apu/tb/ariane_axi_soc_pkg.sv
 $CVA6_DIR/core/include/ariane_axi_pkg.sv
 $CVA6_DIR/core/fpu/src/fpnew_pkg.sv

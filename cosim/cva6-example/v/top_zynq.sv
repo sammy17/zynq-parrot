@@ -14,6 +14,9 @@ module top_zynq
 
      , parameter integer C_M00_AXI_ADDR_WIDTH   = 32
      , parameter integer C_M00_AXI_DATA_WIDTH   = 64
+
+     , parameter integer C_M01_AXI_ADDR_WIDTH   = 32
+     , parameter integer C_M01_AXI_DATA_WIDTH   = 64
      )
    (
     // AXI4-Lite Slave bus
@@ -138,6 +141,29 @@ module top_zynq
     ,input wire                                  m00_axi_rlast
     ,input wire [1:0]                            m00_axi_rresp
     ,input wire                                  m00_axi_ruser
+
+    // AXI4-Lite Master bus
+    , input wire                                  m01_axi_aclk
+    , input wire                                  m01_axi_aresetn
+    , output wire [C_M01_AXI_ADDR_WIDTH-1 : 0]    m01_axi_awaddr
+    , output wire [2 : 0]                         m01_axi_awprot
+    , output wire                                 m01_axi_awvalid
+    , input wire                                  m01_axi_awready
+    , output wire [C_M01_AXI_DATA_WIDTH-1 : 0]    m01_axi_wdata
+    , output wire [(C_M01_AXI_DATA_WIDTH/8)-1:0]  m01_axi_wstrb
+    , output wire                                 m01_axi_wvalid
+    , input wire                                  m01_axi_wready
+    , input wire [1 : 0]                          m01_axi_bresp
+    , input wire                                  m01_axi_bvalid
+    , output wire                                 m01_axi_bready
+    , output wire [C_M01_AXI_ADDR_WIDTH-1 : 0]    m01_axi_araddr
+    , output wire [2 : 0]                         m01_axi_arprot
+    , output wire                                 m01_axi_arvalid
+    , input wire                                  m01_axi_arready
+    , input wire [C_M01_AXI_DATA_WIDTH-1 : 0]     m01_axi_rdata
+    , input wire [1 : 0]                          m01_axi_rresp
+    , input wire                                  m01_axi_rvalid
+    , output wire                                 m01_axi_rready
     );
 
    logic [4:0][C_S00_AXI_DATA_WIDTH-1:0]        csr_data_lo;
@@ -359,11 +385,14 @@ module top_zynq
 
    // AXI 0x0000_0000 .. 0x0FFF_FFFF -> Core 0x8000_0000 - 0x8FFF_FFFF
    // AXI 0x2000_0000 .. 0x2FFF_FFFF -> Core 0x0000_0000 - 0x0FFF_FFFF
-   assign waddr_translated_lo = {32'b0, ~s01_axi_awaddr[29], 3'b0, s01_axi_awaddr[0+:28]};
-   assign raddr_translated_lo = {32'b0, ~s01_axi_araddr[29], 3'b0, s01_axi_araddr[0+:28]};
+   assign waddr_translated_lo = (s01_axi_awaddr < 32'h20000000) ? (s01_axi_awaddr + 32'h80000000) : (s01_axi_awaddr - 32'h20000000);
+   assign raddr_translated_lo = (s01_axi_araddr < 32'h20000000) ? (s01_axi_araddr + 32'h80000000) : (s01_axi_araddr - 32'h20000000);
 
    assign m00_axi_awaddr = (axi_awaddr[0+:32] ^ 32'h8000_0000) + csr_data_lo[2];
    assign m00_axi_araddr = (axi_araddr[0+:32] ^ 32'h8000_0000) + csr_data_lo[2];
+
+   assign m01_axi_awprot = '0;
+   assign m01_axi_arprot = '0;
 
    assign pl_to_ps_fifo_v_li    = io_v & io_we;
    assign pl_to_ps_fifo_data_li = {(io_v & io_we), io_addr[22:0], io_data[7:0]};
@@ -435,74 +464,88 @@ module top_zynq
      ,.s_rlast_o   (s01_axi_rlast)
      ,.s_ruser_o   (s01_axi_ruser)
 
-     ,.m_awready_i (m00_axi_awready)
-     ,.m_awvalid_o (m00_axi_awvalid)
-     ,.m_awburst_o (m00_axi_awburst)
-     ,.m_awaddr_o  (axi_awaddr)
-     ,.m_awlen_o   (m00_axi_awlen)
-     ,.m_awsize_o  (m00_axi_awsize)
-     ,.m_awid_o    (m00_axi_awid)
-     ,.m_awcache_o (m00_axi_awcache)
-     ,.m_awprot_o  (m00_axi_awprot)
-     ,.m_awqos_o   (m00_axi_awqos)
-     ,.m_awuser_o  (m00_axi_awuser)
-     ,.m_awlock_o  (m00_axi_awlock)
+     ,.m0_awready_i (m00_axi_awready)
+     ,.m0_awvalid_o (m00_axi_awvalid)
+     ,.m0_awburst_o (m00_axi_awburst)
+     ,.m0_awaddr_o  (axi_awaddr)
+     ,.m0_awlen_o   (m00_axi_awlen)
+     ,.m0_awsize_o  (m00_axi_awsize)
+     ,.m0_awid_o    (m00_axi_awid)
+     ,.m0_awcache_o (m00_axi_awcache)
+     ,.m0_awprot_o  (m00_axi_awprot)
+     ,.m0_awqos_o   (m00_axi_awqos)
+     ,.m0_awuser_o  (m00_axi_awuser)
+     ,.m0_awlock_o  (m00_axi_awlock)
 
-     ,.m_wready_i  (m00_axi_wready)
-     ,.m_wvalid_o  (m00_axi_wvalid)
-     ,.m_wstrb_o   (m00_axi_wstrb)
-     ,.m_wdata_o   (m00_axi_wdata)
-     ,.m_wlast_o   (m00_axi_wlast)
-     ,.m_wuser_o   (m00_axi_wuser)
+     ,.m0_wready_i  (m00_axi_wready)
+     ,.m0_wvalid_o  (m00_axi_wvalid)
+     ,.m0_wstrb_o   (m00_axi_wstrb)
+     ,.m0_wdata_o   (m00_axi_wdata)
+     ,.m0_wlast_o   (m00_axi_wlast)
+     ,.m0_wuser_o   (m00_axi_wuser)
 
-     ,.m_bvalid_i  (m00_axi_bvalid)
-     ,.m_bresp_i   (m00_axi_bresp)
-     ,.m_bid_i     (m00_axi_bid)
-     ,.m_buser_i   (m00_axi_buser)
-     ,.m_bready_o  (m00_axi_bready)
+     ,.m0_bvalid_i  (m00_axi_bvalid)
+     ,.m0_bresp_i   (m00_axi_bresp)
+     ,.m0_bid_i     (m00_axi_bid)
+     ,.m0_buser_i   (m00_axi_buser)
+     ,.m0_bready_o  (m00_axi_bready)
 
-     ,.m_arready_i (m00_axi_arready)
-     ,.m_arvalid_o (m00_axi_arvalid)
-     ,.m_arburst_o (m00_axi_arburst)
-     ,.m_araddr_o  (axi_araddr)
-     ,.m_arlen_o   (m00_axi_arlen)
-     ,.m_arsize_o  (m00_axi_arsize)
-     ,.m_arid_o    (m00_axi_arid)
-     ,.m_arcache_o (m00_axi_arcache)
-     ,.m_arprot_o  (m00_axi_arprot)
-     ,.m_arqos_o   (m00_axi_arqos)
-     ,.m_aruser_o  (m00_axi_aruser)
-     ,.m_arlock_o  (m00_axi_arlock)
+     ,.m0_arready_i (m00_axi_arready)
+     ,.m0_arvalid_o (m00_axi_arvalid)
+     ,.m0_arburst_o (m00_axi_arburst)
+     ,.m0_araddr_o  (axi_araddr)
+     ,.m0_arlen_o   (m00_axi_arlen)
+     ,.m0_arsize_o  (m00_axi_arsize)
+     ,.m0_arid_o    (m00_axi_arid)
+     ,.m0_arcache_o (m00_axi_arcache)
+     ,.m0_arprot_o  (m00_axi_arprot)
+     ,.m0_arqos_o   (m00_axi_arqos)
+     ,.m0_aruser_o  (m00_axi_aruser)
+     ,.m0_arlock_o  (m00_axi_arlock)
 
-     ,.m_rvalid_i  (m00_axi_rvalid)
-     ,.m_rdata_i   (m00_axi_rdata)
-     ,.m_rresp_i   (m00_axi_rresp)
-     ,.m_rid_i     (m00_axi_rid)
-     ,.m_rlast_i   (m00_axi_rlast)
-     ,.m_ruser_i   (m00_axi_ruser)
-     ,.m_rready_o  (m00_axi_rready)
+     ,.m0_rvalid_i  (m00_axi_rvalid)
+     ,.m0_rdata_i   (m00_axi_rdata)
+     ,.m0_rresp_i   (m00_axi_rresp)
+     ,.m0_rid_i     (m00_axi_rid)
+     ,.m0_rlast_i   (m00_axi_rlast)
+     ,.m0_ruser_i   (m00_axi_ruser)
+     ,.m0_rready_o  (m00_axi_rready)
 
      ,.io_awready_i(io_awready)
      ,.io_awvalid_o(io_awvalid)
      ,.io_awaddr_o (io_awaddr)
-
      ,.io_wready_i (io_wready)
      ,.io_wvalid_o (io_wvalid)
      ,.io_wstrb_o  (io_wstrb)
      ,.io_wdata_o  (io_wdata)
-
      ,.io_bvalid_i (io_bvalid)
      ,.io_bresp_i  (io_bresp)
      ,.io_bready_o (io_bready)
-
      ,.io_arready_i(io_arready)
      ,.io_arvalid_o(io_arvalid)
      ,.io_araddr_o (io_araddr)
-
      ,.io_rvalid_i (io_rvalid)
      ,.io_rdata_i  (io_rdata)
      ,.io_rresp_i  (io_rresp)
      ,.io_rready_o (io_rready)
+
+     ,.m1_awready_i(m01_axi_awready)
+     ,.m1_awvalid_o(m01_axi_awvalid)
+     ,.m1_awaddr_o (m01_axi_awaddr)
+     ,.m1_wready_i (m01_axi_wready)
+     ,.m1_wvalid_o (m01_axi_wvalid)
+     ,.m1_wstrb_o  (m01_axi_wstrb)
+     ,.m1_wdata_o  (m01_axi_wdata)
+     ,.m1_bvalid_i (m01_axi_bvalid)
+     ,.m1_bresp_i  (m01_axi_bresp)
+     ,.m1_bready_o (m01_axi_bready)
+     ,.m1_arready_i(m01_axi_arready)
+     ,.m1_arvalid_o(m01_axi_arvalid)
+     ,.m1_araddr_o (m01_axi_araddr)
+     ,.m1_rvalid_i (m01_axi_rvalid)
+     ,.m1_rdata_i  (m01_axi_rdata)
+     ,.m1_rresp_i  (m01_axi_rresp)
+     ,.m1_rready_o (m01_axi_rready)
      );
 
    axi_lite_to_dma

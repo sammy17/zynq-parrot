@@ -299,7 +299,7 @@ extern "C" void cosim_main(char *argstr) {
 #endif
   while (1) {
 #ifndef FPGA
-    zpl->axil_poll();
+    //zpl->axil_poll();
 #endif
 #ifdef SIM_BACKPRESSURE_ENABLE
     if (!(rand() % SIM_BACKPRESSURE_CHANCE)) {

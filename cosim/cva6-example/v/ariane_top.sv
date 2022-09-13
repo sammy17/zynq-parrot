@@ -64,53 +64,53 @@ module ariane_top
 
    // Master AXI4 Bus
    // Missing atop and region fields
-   ,input m_awready_i
-   ,output m_awvalid_o
-   ,output [1:0] m_awburst_o
-   ,output [AXI_ADDR_WIDTH-1:0] m_awaddr_o
-   ,output [7:0] m_awlen_o
-   ,output [2:0] m_awsize_o
-   ,output [4:0] m_awid_o
-   ,output [3:0] m_awcache_o
-   ,output [2:0] m_awprot_o
-   ,output [3:0] m_awqos_o
-   ,output m_awuser_o
-   ,output m_awlock_o
+   ,input m0_awready_i
+   ,output m0_awvalid_o
+   ,output [1:0] m0_awburst_o
+   ,output [AXI_ADDR_WIDTH-1:0] m0_awaddr_o
+   ,output [7:0] m0_awlen_o
+   ,output [2:0] m0_awsize_o
+   ,output [4:0] m0_awid_o
+   ,output [3:0] m0_awcache_o
+   ,output [2:0] m0_awprot_o
+   ,output [3:0] m0_awqos_o
+   ,output m0_awuser_o
+   ,output m0_awlock_o
 
-   ,input m_wready_i
-   ,output m_wvalid_o
-   ,output [AXI_STRB_WIDTH-1:0] m_wstrb_o
-   ,output [AXI_DATA_WIDTH-1:0] m_wdata_o
-   ,output m_wlast_o
-   ,output m_wuser_o
+   ,input m0_wready_i
+   ,output m0_wvalid_o
+   ,output [AXI_STRB_WIDTH-1:0] m0_wstrb_o
+   ,output [AXI_DATA_WIDTH-1:0] m0_wdata_o
+   ,output m0_wlast_o
+   ,output m0_wuser_o
 
-   ,input m_bvalid_i
-   ,input [1:0] m_bresp_i
-   ,input [4:0] m_bid_i
-   ,input m_buser_i
-   ,output m_bready_o
+   ,input m0_bvalid_i
+   ,input [1:0] m0_bresp_i
+   ,input [4:0] m0_bid_i
+   ,input m0_buser_i
+   ,output m0_bready_o
 
    // Missing region field
-   ,input m_arready_i
-   ,output m_arvalid_o
-   ,output [1:0] m_arburst_o
-   ,output [AXI_ADDR_WIDTH-1:0] m_araddr_o
-   ,output [7:0] m_arlen_o
-   ,output [2:0] m_arsize_o
-   ,output [4:0] m_arid_o
-   ,output [3:0] m_arcache_o
-   ,output [2:0] m_arprot_o
-   ,output [3:0] m_arqos_o
-   ,output m_aruser_o
-   ,output m_arlock_o
+   ,input m0_arready_i
+   ,output m0_arvalid_o
+   ,output [1:0] m0_arburst_o
+   ,output [AXI_ADDR_WIDTH-1:0] m0_araddr_o
+   ,output [7:0] m0_arlen_o
+   ,output [2:0] m0_arsize_o
+   ,output [4:0] m0_arid_o
+   ,output [3:0] m0_arcache_o
+   ,output [2:0] m0_arprot_o
+   ,output [3:0] m0_arqos_o
+   ,output m0_aruser_o
+   ,output m0_arlock_o
 
-   ,input m_rvalid_i
-   ,input [AXI_DATA_WIDTH-1:0] m_rdata_i
-   ,input [1:0] m_rresp_i
-   ,input [4:0] m_rid_i
-   ,input m_rlast_i
-   ,input m_ruser_i
-   ,output m_rready_o
+   ,input m0_rvalid_i
+   ,input [AXI_DATA_WIDTH-1:0] m0_rdata_i
+   ,input [1:0] m0_rresp_i
+   ,input [4:0] m0_rid_i
+   ,input m0_rlast_i
+   ,input m0_ruser_i
+   ,output m0_rready_o
 
    // GPIO Master AXI4-Lite port
    ,input io_awready_i
@@ -134,6 +134,29 @@ module ariane_top
    ,input [AXI_DATA_WIDTH-1:0] io_rdata_i
    ,input [1:0] io_rresp_i
    ,output io_rready_o
+
+   // BRAM Master AXI4-Lite port
+   ,input m1_awready_i
+   ,output m1_awvalid_o
+   ,output [AXI_ADDR_WIDTH-1:0] m1_awaddr_o
+
+   ,input m1_wready_i
+   ,output m1_wvalid_o
+   ,output [AXI_STRB_WIDTH-1:0] m1_wstrb_o
+   ,output [AXI_DATA_WIDTH-1:0] m1_wdata_o
+
+   ,input m1_bvalid_i
+   ,input [1:0] m1_bresp_i
+   ,output m1_bready_o
+
+   ,input m1_arready_i
+   ,output m1_arvalid_o
+   ,output [AXI_ADDR_WIDTH-1:0] m1_araddr_o
+
+   ,input m1_rvalid_i
+   ,input [AXI_DATA_WIDTH-1:0] m1_rdata_i
+   ,input [1:0] m1_rresp_i
+   ,output m1_rready_o
   );
 
 localparam NBSlave = ariane_soc::NrSlaves; // 0: ariane, 1: host
@@ -165,6 +188,11 @@ AXI_LITE #(
     .AXI_ADDR_WIDTH ( AXI_ADDR_WIDTH     ),
     .AXI_DATA_WIDTH ( AXI_DATA_WIDTH     )
 ) gpio();
+
+AXI_LITE #(
+    .AXI_ADDR_WIDTH ( AXI_ADDR_WIDTH     ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH     )
+) bram();
 
 // Slave connections
 assign slave[1].aw_valid  = s_awvalid_i;
@@ -218,52 +246,52 @@ assign s_rlast_o          = slave[1].r_last;
 assign s_ruser_o          = slave[1].r_user;
 
 // Master connections
-assign dram.aw_ready      = m_awready_i;
-assign m_awvalid_o        = dram.aw_valid;
-assign m_awburst_o        = dram.aw_burst;
-assign m_awaddr_o         = dram.aw_addr;
-assign m_awlen_o          = dram.aw_len;
-assign m_awsize_o         = dram.aw_size;
-assign m_awid_o           = dram.aw_id;
-assign m_awcache_o        = dram.aw_cache;
-assign m_awprot_o         = dram.aw_prot;
-assign m_awqos_o          = dram.aw_qos;
-assign m_awuser_o         = dram.aw_user;
-assign m_awlock_o         = dram.aw_lock;
+assign dram.aw_ready      = m0_awready_i;
+assign m0_awvalid_o       = dram.aw_valid;
+assign m0_awburst_o       = dram.aw_burst;
+assign m0_awaddr_o        = dram.aw_addr;
+assign m0_awlen_o         = dram.aw_len;
+assign m0_awsize_o        = dram.aw_size;
+assign m0_awid_o          = dram.aw_id;
+assign m0_awcache_o       = dram.aw_cache;
+assign m0_awprot_o        = dram.aw_prot;
+assign m0_awqos_o         = dram.aw_qos;
+assign m0_awuser_o        = dram.aw_user;
+assign m0_awlock_o        = dram.aw_lock;
 
-assign dram.w_ready       = m_wready_i;
-assign m_wvalid_o         = dram.w_valid;
-assign m_wstrb_o          = dram.w_strb;
-assign m_wdata_o          = dram.w_data;
-assign m_wlast_o          = dram.w_last;
-assign m_wuser_o          = dram.w_user;
+assign dram.w_ready       = m0_wready_i;
+assign m0_wvalid_o        = dram.w_valid;
+assign m0_wstrb_o         = dram.w_strb;
+assign m0_wdata_o         = dram.w_data;
+assign m0_wlast_o         = dram.w_last;
+assign m0_wuser_o         = dram.w_user;
 
-assign dram.b_valid       = m_bvalid_i;
-assign dram.b_resp        = m_bresp_i;
-assign dram.b_id          = m_bid_i;
-assign dram.b_user        = m_buser_i;
-assign m_bready_o         = dram.b_ready;
+assign dram.b_valid       = m0_bvalid_i;
+assign dram.b_resp        = m0_bresp_i;
+assign dram.b_id          = m0_bid_i;
+assign dram.b_user        = m0_buser_i;
+assign m0_bready_o        = dram.b_ready;
 
-assign dram.ar_ready      = m_arready_i;
-assign m_arvalid_o        = dram.ar_valid;
-assign m_arburst_o        = dram.ar_burst;
-assign m_araddr_o         = dram.ar_addr;
-assign m_arlen_o          = dram.ar_len;
-assign m_arsize_o         = dram.ar_size;
-assign m_arid_o           = dram.ar_id;
-assign m_arcache_o        = dram.ar_cache;
-assign m_arprot_o         = dram.ar_prot;
-assign m_arqos_o          = dram.ar_qos;
-assign m_aruser_o         = dram.ar_user;
-assign m_arlock_o         = dram.ar_lock;
+assign dram.ar_ready      = m0_arready_i;
+assign m0_arvalid_o       = dram.ar_valid;
+assign m0_arburst_o       = dram.ar_burst;
+assign m0_araddr_o        = dram.ar_addr;
+assign m0_arlen_o         = dram.ar_len;
+assign m0_arsize_o        = dram.ar_size;
+assign m0_arid_o          = dram.ar_id;
+assign m0_arcache_o       = dram.ar_cache;
+assign m0_arprot_o        = dram.ar_prot;
+assign m0_arqos_o         = dram.ar_qos;
+assign m0_aruser_o        = dram.ar_user;
+assign m0_arlock_o        = dram.ar_lock;
 
-assign dram.r_valid       = m_rvalid_i;
-assign dram.r_data        = m_rdata_i;
-assign dram.r_resp        = m_rresp_i;
-assign dram.r_id          = m_rid_i;
-assign dram.r_last        = m_rlast_i;
-assign dram.r_user        = m_ruser_i;
-assign m_rready_o         = dram.r_ready;
+assign dram.r_valid       = m0_rvalid_i;
+assign dram.r_data        = m0_rdata_i;
+assign dram.r_resp        = m0_rresp_i;
+assign dram.r_id          = m0_rid_i;
+assign dram.r_last        = m0_rlast_i;
+assign dram.r_user        = m0_ruser_i;
+assign m0_rready_o        = dram.r_ready;
 
 // GPIO connections
 assign gpio.aw_ready      = io_awready_i;
@@ -288,6 +316,29 @@ assign gpio.r_data        = io_rdata_i;
 assign gpio.r_resp        = io_rresp_i;
 assign io_rready_o        = gpio.r_ready;
 
+// BRAM connections
+assign bram.aw_ready      = m1_awready_i;
+assign m1_awvalid_o       = bram.aw_valid;
+assign m1_awaddr_o        = bram.aw_addr;
+
+assign bram.w_ready       = m1_wready_i;
+assign m1_wvalid_o        = bram.w_valid;
+assign m1_wstrb_o         = bram.w_strb;
+assign m1_wdata_o         = bram.w_data;
+
+assign bram.b_valid       = m1_bvalid_i;
+assign bram.b_resp        = m1_bresp_i;
+assign m1_bready_o        = bram.b_ready;
+
+assign bram.ar_ready      = m1_arready_i;
+assign m1_arvalid_o       = bram.ar_valid;
+assign m1_araddr_o        = bram.ar_addr;
+
+assign bram.r_valid       = m1_rvalid_i;
+assign bram.r_data        = m1_rdata_i;
+assign bram.r_resp        = m1_rresp_i;
+assign m1_rready_o        = bram.r_ready;
+
 // ---------------
 // AXI Xbar
 // ---------------
@@ -309,13 +360,15 @@ axi_node_wrap_with_slices #(
     .slave        ( slave        ),
     .master       ( master       ),
     .start_addr_i ({
-        ariane_soc::CLINTBase,
         ariane_soc::GPIOBase,
+        ariane_soc::CLINTBase,
+        ariane_soc::BOOTBase,
         ariane_soc::DRAMBase
     }),
     .end_addr_i   ({
-        ariane_soc::CLINTBase    + ariane_soc::CLINTLength - 1,
         ariane_soc::GPIOBase     + ariane_soc::GPIOLength - 1,
+        ariane_soc::CLINTBase    + ariane_soc::CLINTLength - 1,
+        ariane_soc::BOOTBase     + ariane_soc::BOOTLength - 1,
         ariane_soc::DRAMBase     + ariane_soc::DRAMLength - 1
     }),
     .valid_rule_i (ariane_soc::ValidRule)
@@ -333,7 +386,7 @@ ariane #(
 ) i_ariane (
     .clk_i        ( clk_i               ),
     .rst_ni       ( core_resetn_i       ),
-    .boot_addr_i  ( ariane_soc::DRAMBase), // start fetching from DRAM
+    .boot_addr_i  ( 32'h10000000 /*ariane_soc::DRAMBase*/), // start fetching from DRAM
     .hart_id_i    ( '0                  ),
     .irq_i        ( '0                  ),
     .ipi_i        ( ipi                 ),
@@ -399,17 +452,31 @@ axi_riscv_atomics_wrap #(
 // ---------------
 // GPIO
 // ---------------
-
 axi_to_axi_lite #(
   .NUM_PENDING_RD(),
   .NUM_PENDING_WR()
-) i_axi2axilite (
+) i_axi2axilite_gpio (
   .clk_i      ( clk_i                   ),
   .rst_ni     ( resetn_i                ),
   .testmode_i ( '0                      ),
   .in         ( master[ariane_soc::GPIO]),
   .out        ( gpio                    )
 );
+
+// ---------------
+// BOOT RAM
+// ---------------
+axi_to_axi_lite #(
+  .NUM_PENDING_RD(),
+  .NUM_PENDING_WR()
+) i_axi2axilite_bram (
+  .clk_i      ( clk_i                   ),
+  .rst_ni     ( resetn_i                ),
+  .testmode_i ( '0                      ),
+  .in         ( master[ariane_soc::BOOT]),
+  .out        ( bram                    )
+);
+
 
 localparam debug_lp = 0;
 
