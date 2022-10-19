@@ -1,11 +1,13 @@
 
 include $(TOP)/cosim/mk/Makefile.common
+SHELL := /bin/bash
 
 MODE ?= tcl
-
 # update this with a pointer to your vivado install
+XILINX_ENV=$(error Please set your Xilinx environment settings script path)
+#XILINX_ENV=source /tools/Xilinx/Vivado/2020.1/settings64.sh
 #XILINX_ENV=source /tools/Xilinx/Vivado/2019.1/settings64.sh
-XILINX_ENV=source /gro/cad/Xilinx/Vivado/2019.1/settings64.sh
+#XILINX_ENV=source /gro/cad/Xilinx/Vivado/2019.1/settings64.sh
 
 CFLAGS += -O2
 CFLAGS += -lcma -lpthread
@@ -44,7 +46,7 @@ fpga_build_ip: clean_fpga_build $(FLIST)
 	-@tail -n5 vivado.log
 
 fpga_build: fpga_build_ip
-	$(VIVADO) -source $(CURR)/vivado-create-block.tcl -mode $(MODE)
+	$(XILINX_ENV) && $(VIVADO) -source $(CURR)/vivado-create-block.tcl -mode $(MODE)
 	$(MAKE) fpga_report_build_block
 
 pack_bitstream:

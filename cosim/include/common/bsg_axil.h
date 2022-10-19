@@ -23,7 +23,7 @@ using namespace std;
 using namespace bsg_nonsynth_dpi;
 
 // W = width of pin
-template <unsigned int W> class pin {
+template <uint32_t W> class pin {
   std::unique_ptr<dpi_gpio<W> > gpio;
 
 public:
@@ -31,20 +31,20 @@ public:
     gpio = std::make_unique<dpi_gpio<W> >(hierarchy);
   }
 
-  void set(const unsigned int val) {
-    unsigned int bval = 0;
-    for (int i = 0; i < W; i++) {
+  void set(const uint32_t val) {
+    uint32_t bval = 0;
+    for (uint32_t i = 0; i < W; i++) {
       bval = (val & (1 << i)) >> i;
       gpio->set(i, bval);
     }
   }
 
-  void operator=(const unsigned int val) {
+  void operator=(const uint32_t val) {
     set(val);
   }
 
-  int get() const {
-    unsigned int N = 0;
+  uint32_t get() const {
+    uint32_t N = 0;
     for (int i = 0; i < W; i++) {
       N |= gpio->get(i) << i;
     }
@@ -59,13 +59,13 @@ public:
 
 class axil_device {
 public:
-  virtual int read(int address, void (*tick)()) = 0;
-  virtual void write(int address, int data, void (*tick)()) = 0;
+  virtual int32_t read(uintptr_t address, void (*tick)()) = 0;
+  virtual void write(uintptr_t address, int32_t data, void (*tick)()) = 0;
 };
 
 // A = axil address width
 // D = axil data width
-template <unsigned int A, unsigned int D> class axilm {
+template <uint32_t A, uint32_t D> class axilm {
 public:
   pin<1> p_aclk;
   pin<1> p_aresetn;
@@ -125,8 +125,8 @@ public:
     printf("bp_zynq_pl: Exiting reset\n");
   }
 
-  int axil_read_helper(unsigned int address, void (*tick)()) {
-    int data;
+  int axil_read_helper(uint64_t address, void (*tick)()) {
+    uint32_t data;
     int timeout_counter = 0;
 
     // assert these signals "late in the cycle"
@@ -170,7 +170,7 @@ public:
     return data;
   }
 
-  void axil_write_helper(unsigned int address, int data, int wstrb,
+  void axil_write_helper(uintptr_t address, uint32_t data, int wstrb,
                          void (*tick)()) {
     int timeout_counter = 0;
 
@@ -237,7 +237,7 @@ public:
 
 // A = axil address width
 // D = axil data width
-template <unsigned int A, unsigned int D> class axils {
+template <uint32_t A, uint32_t D> class axils {
 public:
   pin<1> p_aclk;
   pin<1> p_aresetn;
@@ -299,7 +299,7 @@ public:
 
   void axil_read_helper(axil_device *p, void (*tick)()) {
     int timeout_counter = 0;
-    int data;
+    int32_t data;
 
     this->p_arready = 1;
     while (this->p_arvalid == 0) {
@@ -310,12 +310,12 @@ public:
       tick();
     }
 
-    int raddr = this->p_araddr;
+    uintptr_t raddr = this->p_araddr;
     tick();
 
     this->p_arready = 0;
 
-    int rdata = p->read(raddr, tick);
+    int32_t rdata = p->read(raddr, tick);
 
     this->p_rdata = rdata;
     this->p_rvalid = 1;
@@ -334,7 +334,7 @@ public:
     return;
   }
 
-  int axil_write_helper(axil_device *p, void (*tick)()) {
+  int32_t axil_write_helper(axil_device *p, void (*tick)()) {
     int timeout_counter = 0;
 
     assert(this->p_wstrb == 0xf); // we only support full int writes right now
@@ -345,8 +345,8 @@ public:
     bool aw_done = false;
     bool w_done = false;
 
-    int awaddr = 0;
-    int wdata = 0;
+    uintptr_t awaddr = 0;
+    int32_t wdata = 0;
 
     // loop until both address and data consumed
     // subordinate is allowed to consume one before the other, or both at once

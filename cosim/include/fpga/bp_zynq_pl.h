@@ -87,9 +87,9 @@ using namespace std;
 
 class bp_zynq_pl {
 public:
-  unsigned int BP_ZYNQ_PL_DEBUG = 0;
-  unsigned int gp0_base_offset = 0;
-  unsigned int gp1_base_offset = 0;
+  bool BP_ZYNQ_PL_DEBUG = 0;
+  uintptr_t gp0_base_offset = 0;
+  uintptr_t gp1_base_offset = 0;
 
   bp_zynq_pl(int argc, char *argv[]) {
     printf("// bp_zynq_pl: be sure to run as root\n");
@@ -98,33 +98,34 @@ public:
     int fd = open("/dev/mem", O_RDWR | O_SYNC);
     assert(fd != 0);
 
-    int *addr0 = (int *)GP0_ADDR_BASE; // e.g. 0x43c00000;
-    int *addr1 = (int *)GP1_ADDR_BASE; // e.g. 0x83c00000;
+    uintptr_t * addr0 = (uintptr_t *)GP0_ADDR_BASE; // e.g. 0x43c00000;
+    uintptr_t * addr1 = (uintptr_t *)GP1_ADDR_BASE; // e.g. 0x83c00000;
 
 #ifdef GP0_ENABLE
     // map in first PLAXI region of physical addresses to virtual addresses
-    volatile int *ptr0 =
-        (int *)mmap(addr0, GP0_ADDR_SIZE_BYTES, PROT_READ | PROT_WRITE,
+    volatile uintptr_t * ptr0 =
+        (uintptr_t *)mmap(addr0, GP0_ADDR_SIZE_BYTES, PROT_READ | PROT_WRITE,
                     MAP_SHARED, fd, (uintptr_t)addr0);
     assert(ptr0 == addr0);
 
     // assert(ptr0 != ((void *) -1));
     // if (ptr0 != addr0)
-    //  gp0_base_offset = ( (unsigned int) ptr0 - GP0_ADDR_BASE);
+    //  gp0_base_offset = ( (uint64_t) ptr0 - GP0_ADDR_BASE);
+    //
     printf("// bp_zynq_pl: mmap returned %p (offset %x) errno=%x\n", ptr0,
            gp0_base_offset, errno);
 #endif
     
 #ifdef GP1_ENABLE
     // map in second PLAXI region of physical addresses to virtual addresses
-    volatile int *ptr1 =
-        (int *)mmap(addr1, GP1_ADDR_SIZE_BYTES, PROT_READ | PROT_WRITE,
+    volatile uintptr_t * ptr1 =
+        (uintptr_t *)mmap(addr1, GP1_ADDR_SIZE_BYTES, PROT_READ | PROT_WRITE,
                     MAP_SHARED, fd, (uintptr_t)addr1);
     assert(ptr1 == addr1);
 
     // assert(ptr1 != ((void *) -1));
     // if (ptr1 != addr1)
-    //  gp1_base_offset = ( (unsigned int) ptr1 - GP1_ADDR_BASE);
+    //  gp1_base_offset = ( (uint64_t) ptr1 - GP1_ADDR_BASE);
 
     printf("// bp_zynq_pl: mmap returned %p (offset %x) errno=%x\n", ptr1,
            gp1_base_offset, errno);
@@ -137,7 +138,7 @@ public:
   ~bp_zynq_pl(void) {}
 
   // returns virtual pointer, writes physical parameter into arguments
-  void *allocate_dram(uint32_t len_in_bytes, unsigned long *physical_ptr) {
+  void *allocate_dram(uint32_t len_in_bytes, uintptr_t *physical_ptr) {
 
     // resets all CMA buffers across system (eek!)
     _xlnk_reset();
@@ -163,7 +164,7 @@ public:
 
   bool done(void) { printf("bp_zynq_pl: done() called, exiting\n"); }
 
-  inline void axil_write(unsigned int address, int data, int wstrb=0xF) {
+  inline void axil_write(uintptr_t address, uint32_t data, uint8_t wstrb) {
     if (BP_ZYNQ_PL_DEBUG)
       printf("  bp_zynq_pl: AXI writing [%x]=%8.8x mask %x\n", address, data,
              wstrb);
@@ -171,24 +172,28 @@ public:
     // assert(address >= ADDR_BASE && (address - ADDR_BASE < ADDR_SIZE_BYTES));
     // // "address is not in the correct range?"
 
-    // for now we don't support alternate write strobes
-    assert(wstrb == 0XF);
-    volatile int *ptr;
+    uintptr_t ptr;
     if (address >= GP1_ADDR_BASE)
-      ptr = (int *)address + gp1_base_offset;
+      ptr = gp1_base_offset + address;
     else
-      ptr = (int *)address + gp0_base_offset;
-    ptr[0] = data;
+      ptr = gp0_base_offset + address;
+
+    volatile uint8_t  *byte_ptr = (uint8_t *) ptr;
+    volatile uint16_t *short_ptr = (uint16_t *) ptr;
+    volatile uint32_t *word_ptr = (uint32_t *) ptr;
+    if (wstrb == 0X1) *byte_ptr = data;
+    else if (wstrb == 0X3) *short_ptr = data;
+    else if (wstrb == 0XF) *word_ptr = data;
   }
 
-  inline int axil_read(unsigned int address) {
-    volatile int *ptr;
+  inline int32_t axil_read(uintptr_t address) {
+    volatile uint32_t * ptr;
     if (address >= GP1_ADDR_BASE)
-      ptr = (int *)address + gp1_base_offset;
+      ptr = (uint32_t *)address + gp1_base_offset;
     else
-      ptr = (int *)address + gp0_base_offset;
+      ptr = (uint32_t *)address + gp0_base_offset;
 
-    int data = ptr[0];
+    int32_t data = ptr[0];
 
     if (BP_ZYNQ_PL_DEBUG)
       printf("  bp_zynq_pl: AXI reading [%x]->%8.8x\n", address, data);

@@ -26,21 +26,21 @@ using namespace bsg_nonsynth_dpi;
 #define SCRATCHPAD_BASE 0x1000000
 #define SCRATCHPAD_SIZE 0x100000
 class zynq_scratchpad : public axil_device {
-  std::vector<int> mem;
+  std::vector<int32_t> mem;
 
 public:
   zynq_scratchpad() {
     mem.resize(SCRATCHPAD_SIZE, 0);
   }
 
-  int read(int address, void (*tick)()) override {
-    int final_addr = ((address-SCRATCHPAD_BASE) + SCRATCHPAD_SIZE) % SCRATCHPAD_SIZE;
+  int32_t read(uintptr_t address, void (*tick)()) override {
+    uintptr_t final_addr = ((address-SCRATCHPAD_BASE) + SCRATCHPAD_SIZE) % SCRATCHPAD_SIZE;
     bsg_pr_dbg_pl("  bp_zynq_pl: scratchpad read [%x] == %x\n", final_addr, mem.at(final_addr));
     return mem.at(final_addr);
   }
 
-  void write(int address, int data, void (*tick)()) override {
-    int final_addr = ((address-SCRATCHPAD_BASE) + SCRATCHPAD_SIZE) % SCRATCHPAD_SIZE;
+  void write(uintptr_t address, int32_t data, void (*tick)()) override {
+    uintptr_t final_addr = ((address-SCRATCHPAD_BASE) + SCRATCHPAD_SIZE) % SCRATCHPAD_SIZE;
     bsg_pr_dbg_pl("  bp_zynq_pl: scratchpad write [%x] <- %x\n", final_addr, data);
     mem.at(final_addr) = data;
   }
@@ -109,9 +109,9 @@ public:
     // delete tb;
   }
 
-  void axil_write(unsigned int address, int data, int wstrb) {
-    int address_orig = address;
-    int index;
+  void axil_write(uintptr_t address, int32_t data, uint8_t wstrb) {
+    uintptr_t address_orig = address;
+    uint8_t index;
 
     // we subtract the bases to make it consistent with the Zynq AXI IPI
     // implementation
@@ -137,10 +137,10 @@ public:
     }
   }
 
-  int axil_read(unsigned int address) {
-    int address_orig = address;
-    int index = 0;
-    int data;
+  int32_t axil_read(uintptr_t address) {
+    uintptr_t address_orig = address;
+    uint8_t index;
+    int32_t data;
 
     // we subtract the bases to make it consistent with the Zynq AXI IPI
     // implementation
@@ -174,10 +174,10 @@ public:
     } else if (axi_hp0->p_arvalid && (axi_hp0->p_araddr >= SCRATCHPAD_BASE) && (axi_hp0->p_araddr < SCRATCHPAD_BASE+SCRATCHPAD_SIZE)) {
       axi_hp0->axil_read_helper((axil_device *)scratchpad.get(), tick);
     } else if (axi_hp0->p_awvalid) {
-      int awaddr = axi_hp0->p_awaddr;
+      uintptr_t awaddr = axi_hp0->p_awaddr;
       bsg_pr_err("  bp_zynq_pl: Unsupported AXI device write at [%x]\n", awaddr);
     } else if (axi_hp0->p_arvalid) {
-      int araddr = axi_hp0->p_awaddr;
+      uintptr_t araddr = axi_hp0->p_awaddr;
       bsg_pr_err("  bp_zynq_pl: Unsupported AXI device read at [%x]\n", araddr);
     }
   }

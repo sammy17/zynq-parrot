@@ -4,26 +4,39 @@ CURR := $(shell pwd)
 #############################
 # Project Settings
 #############################
+# Pynq Board
 export PART       ?= xc7z020clg400-1
+# VU96P
+#export PART       ?= xczu3eg-sbva484-1-e
 export TOP_MODULE ?= top
 export BASENAME   ?= blackparrot
 
 #############################
 # Accelerator Software Settings
 #############################
-export NBF_FILE     ?= $(abspath ../prog.nbf)
+export NBF_FILE     ?= $(abspath ../hello_world.nbf)
 export HOST_PROGRAM ?= $(abspath ../ps.cpp)
 export BASE_FLIST   ?= $(abspath ../flist.vcs)
 export FLIST        ?= $(abspath flist.vcs)
 export SIM_ARGS     += $(NBF_FILE)
 export SIM_DEFINES  += -DFPGA
 
+# Set to MULTICORE for different BP configs
+export SV_DEFINES ?=
+
 #SIM_DEFINES  +=-DSKIP_DRAM_TESTING
 
+$(error YOU''RE ON THE RIGHT PATH)
+CFLAGS += -DZYNQ_PL_DEBUG
 CFLAGS += -DZYNQ_PS_DEBUG
-CFLAGS += -DGP0_ENABLE -DGP0_ADDR_BASE=0x40000000 -DGP0_ADDR_WIDTH=6
+ifeq ($(PART),"xc7z020clg400-1")
+
+else
+
+endif
+CFLAGS += -DGP0_ENABLE -DGP0_ADDR_BASE=0x400000000 -DGP0_ADDR_WIDTH=9
 CFLAGS += -DGP0_ADDR_SIZE_BYTES=4096 -DGP0_DATA_WIDTH=32
-CFLAGS += -DGP1_ENABLE -DGP1_ADDR_BASE=0x80000000 -DGP1_ADDR_WIDTH=30
+CFLAGS += -DGP1_ENABLE -DGP1_ADDR_BASE=0x500000000 -DGP1_ADDR_WIDTH=30
 CFLAGS += -DGP1_ADDR_SIZE_BYTES=0x30000000 -DGP1_DATA_WIDTH=32
 
 include $(TOP)/cosim/mk/Makefile.fpga
@@ -32,10 +45,9 @@ include $(TOP)/cosim/mk/Makefile.fpga
 # Modify base flist
 #############################
 $(FLIST): $(BLACKPARROT_DIR)/bp_top/syn/flist.vcs $(BASE_FLIST)
-	echo "+incdir+$(CURR_SRC_DIR)" > $@
+	cat $^ | envsubst > $@
 	echo "+incdir+$(COSIM_DIR)/include/fpga" >> $@
 	# Replace hardened memory which is incorrectly inferred on some Xilinx FPGAs
-	cat $^ | envsubst >> $@
 	sed -i "/bsg_mem_1rw_sync_mask_write_bit.v/d" $@
 	sed -i "/bsg_mem_1rw_sync_mask_write_bit_synth.v/d" $@
 	echo "$(BASEJUMP_STL_DIR)/hard/ultrascale_plus/bsg_mem/bsg_mem_1rw_sync_mask_write_bit.v" >> $@
