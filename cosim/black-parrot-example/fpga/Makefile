@@ -1,10 +1,18 @@
 TOP  := $(shell git rev-parse --show-toplevel)
 CURR := $(shell pwd)
 
+BOARDNAME ?= ultra96v2
+
 #############################
 # Project Settings
 #############################
+ifeq ($(BOARDNAME),ultra96v2)
+export PART       ?= xczu3eg-sbva484-1-e
+else ifeq ($(BOARDNAME),pynqz2)
 export PART       ?= xc7z020clg400-1
+else
+$(error Invalid BOARDNAME)
+endif
 export TOP_MODULE ?= top
 export BASENAME   ?= blackparrot
 
@@ -20,10 +28,20 @@ export SIM_DEFINES  += -DFPGA
 
 #SIM_DEFINES  +=-DSKIP_DRAM_TESTING
 
+#CFLAGS += -DZYNQ_PL_DEBUG
 CFLAGS += -DZYNQ_PS_DEBUG
-CFLAGS += -DGP0_ENABLE -DGP0_ADDR_BASE=0x40000000 -DGP0_ADDR_WIDTH=6
-CFLAGS += -DGP0_ADDR_SIZE_BYTES=4096 -DGP0_DATA_WIDTH=32
+
+ifeq ($(BOARDNAME),ultra96v2)
+CFLAGS += -DGP0_ENABLE -DGP0_ADDR_BASE=0x400000000 -DGP0_ADDR_WIDTH=10
+CFLAGS += -DGP1_ENABLE -DGP1_ADDR_BASE=0x500000000 -DGP1_ADDR_WIDTH=30
+else ifeq ifeq ($(BOARDNAME),pynqz2)
+CFLAGS += -DGP0_ENABLE -DGP0_ADDR_BASE=0x40000000 -DGP0_ADDR_WIDTH=10
 CFLAGS += -DGP1_ENABLE -DGP1_ADDR_BASE=0x80000000 -DGP1_ADDR_WIDTH=30
+else
+$(error Invalid BOARDNAME)
+endif
+
+CFLAGS += -DGP0_ADDR_SIZE_BYTES=4096 -DGP0_DATA_WIDTH=32
 CFLAGS += -DGP1_ADDR_SIZE_BYTES=0x30000000 -DGP1_DATA_WIDTH=32
 
 include $(TOP)/cosim/mk/Makefile.fpga
@@ -32,11 +50,9 @@ include $(TOP)/cosim/mk/Makefile.fpga
 # Modify base flist
 #############################
 $(FLIST): $(BLACKPARROT_DIR)/bp_top/syn/flist.vcs $(BASE_FLIST)
-	echo "+incdir+$(CURR_SRC_DIR)" > $@
+	cat $^ | envsubst > $@
 	echo "+incdir+$(COSIM_DIR)/include/fpga" >> $@
 	# Replace hardened memory which is incorrectly inferred on some Xilinx FPGAs
-	cat $^ | envsubst >> $@
 	sed -i "/bsg_mem_1rw_sync_mask_write_bit.v/d" $@
 	sed -i "/bsg_mem_1rw_sync_mask_write_bit_synth.v/d" $@
 	echo "$(BASEJUMP_STL_DIR)/hard/ultrascale_plus/bsg_mem/bsg_mem_1rw_sync_mask_write_bit.v" >> $@
-

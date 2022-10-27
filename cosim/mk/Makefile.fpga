@@ -14,9 +14,9 @@ XILINX_ENV=source /tools/Xilinx/Vivado/$(VIVADO_VER)/settings64.sh
 #XILINX_ENV=source /gro/cad/Xilinx/Vivado/$(VIVADO_VER)/settings64.sh
 
 CFLAGS += -O2
-CFLAGS += -lcma -lpthread
 CFLAGS += $(SIM_DEFINES)
 CFLAGS += -std=c++14
+LFLAGS += -lcma -lpthread
 
 CINCLUDES += -I$(COSIM_INCLUDE_DIR)/common
 CINCLUDES += -I$(COSIM_INCLUDE_DIR)/fpga
@@ -25,12 +25,12 @@ all:
 	@echo "Rules for FPGA; see $(TOP)/cosim/mk/Makefile.fpga for more:"
 	@grep -o -e "^[a-Z_%\.]*:" $(TOP)/cosim/mk/Makefile.fpga
 
-EXE ?= runme
+EXE ?= control-program
 run: $(EXE)
 	sudo ./$< $(SIM_ARGS)
 
 $(EXE): $(HOST_PROGRAM)
-	$(GCC) $(CFLAGS) $(LDFLAGS) $(CINCLUDES) $(CSOURCES) $< $(CFLAGS) $(LDFLAGS) -o $@
+	$(GCC) $(CFLAGS) $(CINCLUDES) $(CSOURCES) $< $(LFLAGS) -o $@
 
 fpga_report_build_block:
 	-@grep --color "CRITICAL WARNING" vivado.log
@@ -50,7 +50,7 @@ fpga_build_ip: clean_fpga_build $(FLIST)
 	-@tail -n5 vivado.log
 
 fpga_build: fpga_build_ip
-	$(XILINX_ENV) && $(VIVADO) -source $(CURR)/vivado-create-block.$(VIVADO_VER).tcl -mode $(MODE)
+	$(XILINX_ENV) && $(VIVADO) -source $(CURR)/vivado-create-block.$(BOARDNAME).$(VIVADO_VER).tcl -mode $(MODE)
 	$(MAKE) fpga_report_build_block
 
 # we are looking for a *_bd_1.bit, *_bd_1_bd.tcl, *_bd_1.hwh
@@ -59,6 +59,9 @@ fpga_build: fpga_build_ip
 
 pack_bitstream:
 ifeq ($(VIVADO_VER),2019.1)
+	cp $(BASENAME)_bd_proj.srcs/sources_1/bd/$(BASENAME)_bd_1/hw_handoff/$(BASENAME)_bd_1* .
+endif
+ifeq ($(VIVADO_VER),2020.1)
 	cp $(BASENAME)_bd_proj.srcs/sources_1/bd/$(BASENAME)_bd_1/hw_handoff/$(BASENAME)_bd_1* .
 endif
 ifeq ($(VIVADO_VER),2022.1)

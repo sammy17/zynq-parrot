@@ -45,5 +45,3 @@ set_property  ip_repo_paths fpga_build [current_project]
 update_ip_catalog
 
 puts "Type start_gui to enter Vivado GUI; quit to exit"
-
-
