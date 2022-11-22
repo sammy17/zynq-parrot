@@ -341,25 +341,25 @@ module top_zynq
      end
 
    // TODO: The widths here are weird
-   logic [C_S01_AXI_ADDR_WIDTH-1 : 0]           s02_axi_awaddr;
-   logic [2 : 0]                                s02_axi_awprot;
-   logic                                        s02_axi_awvalid;
-   logic                                        s02_axi_awready;
-   logic [C_S01_AXI_DATA_WIDTH-1 : 0]           s02_axi_wdata;
-   logic [(C_S01_AXI_DATA_WIDTH/8)-1 : 0]       s02_axi_wstrb;
-   logic                                        s02_axi_wvalid;
-   logic                                        s02_axi_wready;
-   logic  [1 : 0]                               s02_axi_bresp;
-   logic                                        s02_axi_bvalid;
-   logic                                        s02_axi_bready;
-   logic [C_S01_AXI_ADDR_WIDTH-1 : 0]           s02_axi_araddr;
-   logic [2 : 0]                                s02_axi_arprot;
-   logic                                        s02_axi_arvalid;
-   logic                                        s02_axi_arready;
-   logic  [C_S01_AXI_DATA_WIDTH-1 : 0]          s02_axi_rdata;
-   logic  [1 : 0]                               s02_axi_rresp;
-   logic                                        s02_axi_rvalid;
-   logic                                        s02_axi_rready;
+   logic [C_S01_AXI_ADDR_WIDTH-1 : 0]           spack_axi_awaddr;
+   logic [2 : 0]                                spack_axi_awprot;
+   logic                                        spack_axi_awvalid;
+   logic                                        spack_axi_awready;
+   logic [C_S01_AXI_DATA_WIDTH-1 : 0]           spack_axi_wdata;
+   logic [(C_S01_AXI_DATA_WIDTH/8)-1 : 0]       spack_axi_wstrb;
+   logic                                        spack_axi_wvalid;
+   logic                                        spack_axi_wready;
+   logic  [1 : 0]                               spack_axi_bresp;
+   logic                                        spack_axi_bvalid;
+   logic                                        spack_axi_bready;
+   logic [C_S01_AXI_ADDR_WIDTH-1 : 0]           spack_axi_araddr;
+   logic [2 : 0]                                spack_axi_arprot;
+   logic                                        spack_axi_arvalid;
+   logic                                        spack_axi_arready;
+   logic  [C_S01_AXI_DATA_WIDTH-1 : 0]          spack_axi_rdata;
+   logic  [1 : 0]                               spack_axi_rresp;
+   logic                                        spack_axi_rvalid;
+   logic                                        spack_axi_rready;
 
    bsg_axil_store_packer
     #(.axil_addr_width_p(bp_axil_addr_width_lp)
@@ -370,29 +370,29 @@ module top_zynq
      (.clk_i   (s01_axi_aclk)
       ,.reset_i(~s01_axi_aresetn)
 
-      ,.s_axil_awaddr_i (s02_axi_awaddr)
-      ,.s_axil_awprot_i (s02_axi_awprot)
-      ,.s_axil_awvalid_i(s02_axi_awvalid)
-      ,.s_axil_awready_o(s02_axi_awready)
+      ,.s_axil_awaddr_i (spack_axi_awaddr)
+      ,.s_axil_awprot_i (spack_axi_awprot)
+      ,.s_axil_awvalid_i(spack_axi_awvalid)
+      ,.s_axil_awready_o(spack_axi_awready)
 
-      ,.s_axil_wdata_i  (s02_axi_wdata)
-      ,.s_axil_wstrb_i  (s02_axi_wstrb)
-      ,.s_axil_wvalid_i (s02_axi_wvalid)
-      ,.s_axil_wready_o (s02_axi_wready)
+      ,.s_axil_wdata_i  (spack_axi_wdata)
+      ,.s_axil_wstrb_i  (spack_axi_wstrb)
+      ,.s_axil_wvalid_i (spack_axi_wvalid)
+      ,.s_axil_wready_o (spack_axi_wready)
 
-      ,.s_axil_bresp_o  (s02_axi_bresp)
-      ,.s_axil_bvalid_o (s02_axi_bvalid)
-      ,.s_axil_bready_i (s02_axi_bready)
+      ,.s_axil_bresp_o  (spack_axi_bresp)
+      ,.s_axil_bvalid_o (spack_axi_bvalid)
+      ,.s_axil_bready_i (spack_axi_bready)
 
-      ,.s_axil_araddr_i (s02_axi_araddr)
-      ,.s_axil_arprot_i (s02_axi_arprot)
-      ,.s_axil_arvalid_i(s02_axi_arvalid)
-      ,.s_axil_arready_o(s02_axi_arready)
+      ,.s_axil_araddr_i (spack_axi_araddr)
+      ,.s_axil_arprot_i (spack_axi_arprot)
+      ,.s_axil_arvalid_i(spack_axi_arvalid)
+      ,.s_axil_arready_o(spack_axi_arready)
 
-      ,.s_axil_rdata_o  (s02_axi_rdata)
-      ,.s_axil_rresp_o  (s02_axi_rresp)
-      ,.s_axil_rvalid_o (s02_axi_rvalid)
-      ,.s_axil_rready_i (s02_axi_rready)
+      ,.s_axil_rdata_o  (spack_axi_rdata)
+      ,.s_axil_rresp_o  (spack_axi_rresp)
+      ,.s_axil_rvalid_o (spack_axi_rvalid)
+      ,.s_axil_rready_i (spack_axi_rready)
 
       ,.data_o (pl_to_ps_fifo_data_li)
       ,.v_o    (pl_to_ps_fifo_v_li)
@@ -433,25 +433,25 @@ module top_zynq
      ,.s00_axil_rvalid(bp_axi_rvalid)
      ,.s00_axil_rready(bp_axi_rready)
 
-     ,.m00_axil_awaddr(s02_axi_awaddr)
-     ,.m00_axil_awprot(s02_axi_awprot)
-     ,.m00_axil_awvalid(s02_axi_awvalid)
-     ,.m00_axil_awready(s02_axi_awready)
-     ,.m00_axil_wdata(s02_axi_wdata)
-     ,.m00_axil_wstrb(s02_axi_wstrb)
-     ,.m00_axil_wvalid(s02_axi_wvalid)
-     ,.m00_axil_wready(s02_axi_wready)
-     ,.m00_axil_bresp(s02_axi_bresp)
-     ,.m00_axil_bvalid(s02_axi_bvalid)
-     ,.m00_axil_bready(s02_axi_bready)
-     ,.m00_axil_araddr(s02_axi_araddr)
-     ,.m00_axil_arprot(s02_axi_arprot)
-     ,.m00_axil_arvalid(s02_axi_arvalid)
-     ,.m00_axil_arready(s02_axi_arready)
-     ,.m00_axil_rdata(s02_axi_rdata)
-     ,.m00_axil_rresp(s02_axi_rresp)
-     ,.m00_axil_rvalid(s02_axi_rvalid)
-     ,.m00_axil_rready(s02_axi_rready)
+     ,.m00_axil_awaddr(spack_axi_awaddr)
+     ,.m00_axil_awprot(spack_axi_awprot)
+     ,.m00_axil_awvalid(spack_axi_awvalid)
+     ,.m00_axil_awready(spack_axi_awready)
+     ,.m00_axil_wdata(spack_axi_wdata)
+     ,.m00_axil_wstrb(spack_axi_wstrb)
+     ,.m00_axil_wvalid(spack_axi_wvalid)
+     ,.m00_axil_wready(spack_axi_wready)
+     ,.m00_axil_bresp(spack_axi_bresp)
+     ,.m00_axil_bvalid(spack_axi_bvalid)
+     ,.m00_axil_bready(spack_axi_bready)
+     ,.m00_axil_araddr(spack_axi_araddr)
+     ,.m00_axil_arprot(spack_axi_arprot)
+     ,.m00_axil_arvalid(spack_axi_arvalid)
+     ,.m00_axil_arready(spack_axi_arready)
+     ,.m00_axil_rdata(spack_axi_rdata)
+     ,.m00_axil_rresp(spack_axi_rresp)
+     ,.m00_axil_rvalid(spack_axi_rvalid)
+     ,.m00_axil_rready(spack_axi_rready)
 
      ,.m01_axil_awaddr(m01_axi_awaddr)
      ,.m01_axil_awprot(m01_axi_awprot)
