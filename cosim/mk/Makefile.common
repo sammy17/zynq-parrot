@@ -22,7 +22,7 @@ export HARDFLOAT_DIR         ?= $(BP_EXTERNAL_DIR)/HardFloat
 export CURR_SRC_DIR          ?= $(CURR)/../v
 
 # Set up cad tools if using a non-bsg_cadenv environment
-BSG_CADENV_DIR ?= imports/bsg_cadenv
+BSG_CADENV_DIR ?= $(COSIM_IMPORT_DIR)/bsg_cadenv
 -include $(BSG_CADENV_DIR)/cadenv.mk
 
 ifeq ($(shell /usr/bin/arch),armv7l)
